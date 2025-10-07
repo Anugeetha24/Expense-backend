@@ -6,12 +6,17 @@ import com.springboot.app.model.User;
 import com.springboot.app.repository.UserRepository;
 import com.springboot.app.dto.LoginDTO;
 import com.springboot.app.dto.RegisterDTO;
+import com.springboot.app.dto.JwtResponseDTO;
+import com.springboot.app.security.JwtTokenUtil;
 
 @Service
 public class UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
 
     public String register(RegisterDTO registerDTO) {
         // Check if username already exists
@@ -41,18 +46,21 @@ public class UserService {
         return "User registered successfully";
     }
 
-    public String login(LoginDTO loginDTO) {
+    public JwtResponseDTO login(LoginDTO loginDTO) {
         User user = userRepository.findByUsername(loginDTO.getUsername());
         
         if (user == null) {
-            return "User not found";
+            throw new RuntimeException("User not found");
         }
 
         // In a real application, you should compare hashed passwords
         if (!user.getPassword().equals(loginDTO.getPassword())) {
-            return "Invalid password";
+            throw new RuntimeException("Invalid password");
         }
 
-        return "Login successful";
+        // Generate JWT token
+        String token = jwtTokenUtil.generateToken(user.getUsername());
+        
+        return new JwtResponseDTO(token, user.getUsername(), user.getRole());
     }
 }

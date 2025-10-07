@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import com.springboot.app.service.UserService;
 import com.springboot.app.dto.LoginDTO;
 import com.springboot.app.dto.RegisterDTO;
+import com.springboot.app.dto.JwtResponseDTO;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -25,11 +26,12 @@ public class AuthController {
     }
 
     @PostMapping(value = "/login", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<String> login(@RequestBody LoginDTO loginDTO) {
-        String result = userService.login(loginDTO);
-        if (result.equals("Login successful")) {
-            return ResponseEntity.ok(result);
+    public ResponseEntity<?> login(@RequestBody LoginDTO loginDTO) {
+        try {
+            JwtResponseDTO response = userService.login(loginDTO);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-        return ResponseEntity.badRequest().body(result);
     }
 }
